@@ -5,10 +5,10 @@ rng(1192) % set the seed
 T = 1;S0 = 30;r = 0.1;K = 30;
 Nsim = 1e5; Nstep = 40;N = 200; M = 100;
 epsilon = 0.01;
-model = 'Merton';
+model = 'BS';
 optionType = 'Call';
 theta = 0.5;
-NumMethod = 'implicit';
+NumMethod = 'explicit';
 switch optionType
 	case 'Call'
 		switch model
@@ -31,9 +31,8 @@ switch optionType
 				[pricePDE_FEM_LogPrice1] = FEMLogPrice1( S0,K,r,T,N,M,param,optionType,NumMethod,theta);
 				% 8) FEM LogPrice implementation full
 				[pricePDE_FEM_LogPrice2] = FEMLogPrice2( S0,K,r,T,N,M,param,optionType,NumMethod,theta);
-				% this is ti check the implementation for Levy
-% 				param = [0.6;0;0.1;0.1];model = 'Merton';
-% 				[pricePIDEcheck] = FDLevyLogMoneyness1( S0,K,r,T,N,M,param,model,optionType,NumMethod,theta);
+				% 9) Upwind method
+				[priceUW] = FDLogPriceUpWind( S0,K,r,T,N,M,param,optionType,NumMethod,theta);
 			case 'Merton'
 				param = [0.5;0.6;0.1;0.1];
 				% 1) MC
