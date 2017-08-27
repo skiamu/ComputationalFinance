@@ -1,13 +1,9 @@
-function [price] = FDLevyLogMoneyness1AI( S0,K,r,T,N,M,param,model,optionType,NumMethod,theta,...
-	epsilon)
+function [price] = FDLevyLogMoneyness1AIAmerican( S0,K,r,T,N,M,param,model,optionType,NumMethod,theta,...
+	epsilon,maxiter,tol,omega)
 %UNTITLED22 Summary of this function goes here
 %   Detailed explanation goes here
 %% grid
-if length(param) == 4
-	sigmaDiff = param(4);
-else
-	sigmaDiff = 0;
-end
+sigma = param(1); % diffusion volatility
 dt = T / M;
 % Smin = S0 * exp((r - sigma^2/2) * T -6 * sigma * sqrt(T));
 % Smax = S0 * exp((r - sigma^2/2) * T +6 * sigma * sqrt(T));
@@ -26,7 +22,7 @@ if lambda * dt < 1
 else
 	disp('sufficient condition for convergence NOT satisfied')
 end
-sigma = sqrt(sigma2_eps + sigmaDiff^2);
+sigma = sqrt(sigma2_eps);
 %% matrix definition
 e = ones([N-1 1]);
 switch NumMethod
@@ -57,42 +53,50 @@ end
 %% forward in time
 transf = 'LogMoneyness';
 BC = zeros([N-1 1]);
-
-switch optionType
-	case 'Call'
-		u = subplus(exp(nodes) - 1);
-		h = waitbar(0,'wait please...');
-		for j = 1 : M
-			BC(end) = -M1(1,2) * (exp(xmax) - 1) + ...
-				M2(1,2) * (exp(xmax) - 1);
-			if lambda == 0
-				I = 0;
-			else
-				I = LevyIntegral2AI(k,nodes,u,Br,Bl,N,K,S0,epsilon,optionType,transf);
-			end
-			u = M1 \(M2 * u + BC + I);
-			waitbar(j/M, h);
-		end
-		close(h)
-	case 'Put'
-		u = subplus(1 - exp(nodes));
-		h = waitbar(0,'wait please...');
-		for j = 1 : M
-			BC(1) = -M1(2,1) * (1 - exp(xmin)) + ...
-				M2(2,1) * (1 - exp(xmin));
-			if lambda == 0
-				I = 0;
-			else
-				I = LevyIntegral2AI(k,nodes,u,Br,Bl,N,K,S0,epsilon,optionType,transf);
-			end
-			u = M1 \(M2 * u + BC + I);
-			waitbar(j/M, h);
-		end
-		close(h)
-	otherwise
+u = subplus(1 - exp(nodes));
+h = waitbar(0,'wait please...');
+for j = 1 : M
+	BC(1) = -M1(2,1) * (1 - exp(xmin)) + ...
+		M2(2,1) * (1 - exp(xmin));
+	if lambda == 0
+		I = 0;
+	else
+		I = LevyIntegral2AI(k,nodes,u,Br,Bl,N,K,S0,epsilon,optionType,transf);
+	end
+	% 	u = M1 \(M2 * u + BC + I);
+	b = M2 * u + BC + I;
+	u = PSORalgorithm(M1,b,u,maxiter,tol,omega,N,nodes);
+	waitbar(j/M, h);
 end
+close(h)
 S = K * exp(nodes - r * T);
 C = K * u * exp(-r * T);
 price = interp1(S,C,S0,'spline');
+end
 
-end % function
+function [ V ] = PSORalgorithm(M1,b,V,maxiter,tol,omega,N,x)
+%UNTITLED29 Summary of this function goes here
+%   Detailed explanation goes here
+for i = 1 : maxiter
+	Vold = V;
+	for ii = 1 : N-1
+		if ii == 1
+			y = (b(ii) - M1(ii,ii+1) * Vold(ii+1)) / M1(ii,ii);
+		elseif ii == N-1
+			y = (b(ii) - M1(ii,ii-1) * V(ii-1)) / M1(ii,ii);
+		else
+			y = (b(ii) - M1(ii,ii+1) * Vold(ii+1) - M1(ii,ii-1) * V(ii-1)) / M1(ii,ii);
+		end
+		V(ii) = Vold(ii) + omega * (y - Vold(ii));
+		% x is the full space grid while ii doesn't consider the extreme
+		% points, hence x(ii+1). This is valid if the implementation is the
+		% short one
+		V(ii) = max(V(ii), 1 - exp(x(ii)));
+	end
+	
+	if norm(V - Vold,inf) < tol
+		break
+	end	
+end
+
+end % e

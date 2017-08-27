@@ -10,9 +10,9 @@ switch optionType
 			case 'UO'
 				Payoff = @(x) subplus(x(:,end) - K) .* (max(x, [], 2) < barrier);
 			case 'DI'
-				Payoff = @(x) subplus(x(:,end) - K) - subplus(x(:,end) - K) .* (min(x, [], 2) < barrier);
+				Payoff = @(x) subplus(x(:,end) - K) .* (min(x, [], 2) < barrier);
 			case 'UI'
-				Payoff = @(x) subplus(x(:,end) - K) - subplus(x(:,end) - K) .* (max(x, [], 2) > barrier);
+				Payoff = @(x) subplus(x(:,end) - K) .* (max(x, [], 2) > barrier);
 			otherwise
 				error('invalid barrierType)');
 		end
@@ -23,9 +23,10 @@ switch optionType
 			case 'UO'
 				Payoff = @(x) subplus(K - x(:,end)) .* (max(x, [], 2) < barrier);
 			otherwise
-				error('invalid barrierType)');
-				
+				error('invalid barrierType)');	
 		end
+	otherwise
+		error('optioType')
 end
 
 end

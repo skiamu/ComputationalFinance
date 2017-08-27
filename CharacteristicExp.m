@@ -102,13 +102,20 @@ switch model
 		Psi = @(u) 1 / kappa - (1 / kappa) * sqrt( 1 + u.^2 * sigma^2 * kappa);
 		
 	case 'VG'
-		% parametri VG: 1) sigma = diffusion volatility
-		%               2) kappa = subordinator volatility
-		sigma = param(1);
-		kappa = param(2);
-		
+		% parametri VG: 1) theta = Brownian drift to be subordinated
+		%               2) sigma = Brownian volatility to be subordinated
+		%               3) kappa = subordinator volatility
+		theta = param(1);
+		sigma = param(2);
+		kappa = param(3);
+		if length(param) == 4
+			sigmaDiff = param(4);
+		else
+			sigmaDiff = 0;
+		end
 		% esponente caratteristico con drift nullo
-		Psi = @(u) - (1 / kappa) * log(1 + 0.5 * u.^2 * sigma^2 * kappa);
+		Psi = @(u) - (1 / kappa) * log(1 + 0.5 * u.^2 * sigma^2 * kappa - ...
+			1i * theta * kappa * u) - 0.5 * sigmaDiff^2 * u.^2;
 		
 	case 'BS'
 		sigma = param(1);

@@ -12,10 +12,10 @@ switch model
 		%                    lambda = jump intensity
 		%                    mu = mean jump size
 		%                    delta = std jump size
-		lambda = param(2);
-		mu = param(3);
-		delta = param(4);
-		k = @(y) (lambda / (delta * sqrt(2 * pi))) * exp(-(y - mu).^2 / (2 * delta^2));
+		lambda = param(2); % jump intensity
+		mu = param(3); % mean jump size
+		delta = param(4); % std jump size
+		k = @(y) (lambda/(delta*sqrt(2*pi)) * exp(-(y - mu).^2/(2*delta^2)));
 	case 'Kou'
 		% parametri Kou: 1)   sigma = diffusion volatility;
 		%                     lambda = jump intensity
@@ -29,13 +29,12 @@ switch model
 		k = @(y) p * lambda * lambda_p * exp(-lambda_p * y) .* (y > 0) + ...
 			(1 - p) * lambda * lambda_m * exp(-lambda_m * abs(y)) .* (y < 0);
 	case 'VG'
-		% parametri VG: sigma_brwn = brownian motion volatility
-		%               sigma = diffusion volatility
-		%               kappa
-		sigma = param(1);
-		kappa = param(2);
-		Psi_X = CharacteristicExp( model, param );
-		theta = -Psi_X(-1i);  % drift risk neutral
+		% parametri VG: 1) theta = Brownian drift to be subordinated
+		%               2) sigma = Brownian volatility to be subordinated
+		%               3) kappa = subordinator volatility
+		theta = param(1);
+		sigma = param(2);
+		kappa = param(3);
 		A = theta / sigma^2;
 		B = sqrt(theta^2 + 2 * sigma^2 / kappa) / sigma^2;
 		k = @(y) exp(A .* y - B .* abs(y)) ./ (kappa .* abs(y));

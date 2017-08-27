@@ -33,7 +33,7 @@ switch NumMethod
 		reaz_tilde = 1/dt - r;
 		tr_tilde = -(r - sigma^2/2);
 		MM2 = diff_tilde * DD + reaz_tilde * FF + tr_tilde * FD;
-		MM1 = spdiags(1/dt*e,0,N-1,N-1);
+		MM1 = FF / dt;
 		M1(2:end-1,2:end-1) = MM1;M2(2:end-1,2:end-1) = MM2;
 		M2(2,1) = MM2(2,1); M2(end-1,end) = MM2(1,2);
 	case 'implicit'
@@ -41,7 +41,7 @@ switch NumMethod
 		reaz = 1/dt + r;
 		tr = (r - sigma^2/2);
 		MM1 = diff * DD + reaz * FF + tr * FD;
-		MM2 = spdiags(1/dt*e,0,N-1,N-1);
+		MM2 = FF / dt;
 		M1(2:end-1,2:end-1) = MM1;M2(2:end-1,2:end-1) = MM2;
 		M1(2,1) = MM1(2,1); M1(end-1,end) = MM1(1,2);
 	case 'CN'

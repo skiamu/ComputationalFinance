@@ -3,6 +3,7 @@ function [Price, check, IC] = PricingOptionMC( S0,r,T,K,param,Nsim,Nstep,...
 %UNTITLED16 Summary of this function goes here
 %   Detailed explanation goes here
 
+%% compute the payoff
 if nargin == 9
 	switch optionType
 		case 'Call'
@@ -14,6 +15,7 @@ if nargin == 9
 elseif nargin > 9
 	[ Payoff ] = optionPayoff(K,optionType,barrierType, barrier);
 end
+%% simulate the underlying
 switch model
 	case 'BS'
 		[ S, check] = assetBS( S0,r,T,param,Nsim,Nstep);
@@ -26,6 +28,7 @@ switch model
 	case 'NIG'
 		[ S, check ] = assetNIG(S0,r,T,param,Nsim,Nstep);
 end
+%% discounted payoff
 DiscountedPayoff = exp(-r * T) * Payoff(S);
 [Price, ~, IC] = normfit(DiscountedPayoff);
 
